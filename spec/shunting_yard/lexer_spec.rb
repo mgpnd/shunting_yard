@@ -74,5 +74,23 @@ RSpec.describe ShuntingYard::Lexer do
         end
       end
     end
+
+    context "when input contains unicode symbol" do
+      let(:input) { "'у' + 5 + '⭕️ Emoji value'" }
+
+      before do
+        lexer.add_pattern :operand, /\'[^']+\'/
+      end
+
+      it "tokenizes string properly" do
+        expect(subject).to eq([
+          token(:operand, "'у'", "'у'"),
+          token(:operator, "+", "+"),
+          token(:operand, "5", "5"),
+          token(:operator, "+", "+"),
+          token(:operand, "'⭕️ Emoji value'", "'⭕️ Emoji value'"),
+        ])
+      end
+    end
   end
 end

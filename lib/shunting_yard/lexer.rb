@@ -29,7 +29,7 @@ module ShuntingYard
           match = sc.check(regex)
           next if match.nil?
 
-          longest_match_size = [longest_match_size, match.size].max
+          longest_match_size = [longest_match_size, match.bytesize].max
 
           value = evaluator.(match)
           next if value.nil?
