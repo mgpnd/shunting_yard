@@ -32,7 +32,7 @@ parser.evaluate(input) #=> 24
 `ShuntingYard::Lexer` is responsible for splitting source string into tokens.
 To recognize each possible token it needs to know corresponding patterns represented as regular expressions.
 
-If substring is matched to multiple patterns, **the longest match** wil be used.
+If substring is matched to multiple patterns, **the first match** will be used.
 
 After matching a token, its lexeme is evaluated with provided function. If function is not provided - it returns the lexeme itself.
 

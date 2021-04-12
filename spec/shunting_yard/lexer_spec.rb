@@ -12,13 +12,10 @@ RSpec.describe ShuntingYard::Lexer do
 
     let(:input) { "3+4" }
 
-    before do
-      lexer.add_pattern :space, /\s+/, -> (_) { nil }
+    it "returns tokens in provided order" do
       lexer.add_pattern :operand, /-?\d+/
       lexer.add_pattern :operator, /\+/
-    end
 
-    it "returns tokens in provided order" do
       expect(lexer.tokenize("3+4")).to eq([
         token(:operand, "3", "3"),
         token(:operator, "+", "+"),
@@ -27,6 +24,8 @@ RSpec.describe ShuntingYard::Lexer do
     end
 
     it "recognizes multiple patterns of the same type registered separately" do
+      lexer.add_pattern :operand, /-?\d+/
+      lexer.add_pattern :operator, /\+/
       lexer.add_pattern :operator, /\//
 
       expect(lexer.tokenize("+/")).to include(
@@ -35,22 +34,38 @@ RSpec.describe ShuntingYard::Lexer do
       )
     end
 
-    it "recognizes the longest match for ambiguous pattern" do
-      expect(lexer.tokenize("-32+3")).to include(token(:operand, "-32", "-32"))
+    it "takes the first match for ambiguous pattern" do
+      lexer.add_pattern :operand, /\'(?:-?\d+|\+|-)+\'/
+      lexer.add_pattern :operator, /\+/
+      lexer.add_pattern :operator, /\-/
+      lexer.add_pattern :operand, /-?\d+/
+
+      expect(lexer.tokenize("-32+3")).to include(token(:operator, "-", "-"))
+      expect(lexer.tokenize("30+'-4+4'")).to include(token(:operand, "'-4+4'", "'-4+4'"))
     end
 
     it "evaluates token value" do
-      lexer.add_pattern :operand, /\d+\.\d+/, ->(l) { Float(l) }
+      lexer.add_pattern :operand, /-?\d+\.\d+/, -> (l) { Float(l) }
 
       expect(lexer.tokenize("3.4")).to include(token(:operand, "3.4", 3.4))
     end
 
     it "excludes tokens with nil value" do
+      lexer.add_pattern :space, /\s+/, -> (_) { nil }
+      lexer.add_pattern :operand, /-?\d+/
+      lexer.add_pattern :operator, /\+/
+
       expect(lexer.tokenize("5 + 2")).not_to include(token(:space, " ", nil))
     end
 
     context "when input contains not registered token" do
       let(:input) { "max(5 + 2, 6)" }
+
+      before do
+        lexer.add_pattern :space, /\s+/, -> (_) { nil }
+        lexer.add_pattern :operand, /-?\d+/
+        lexer.add_pattern :operator, /\+/
+      end
 
       context "when custom separator pattern is not registered" do
         it "puts string from current position to next space or EOL into error message" do
@@ -80,6 +95,9 @@ RSpec.describe ShuntingYard::Lexer do
 
       before do
         lexer.add_pattern :operand, /\'[^']+\'/
+        lexer.add_pattern :operand, /-?\d+/
+        lexer.add_pattern :operator, /\+/
+        lexer.add_pattern :space, /\s+/, -> (_) { nil }
       end
 
       it "tokenizes string properly" do

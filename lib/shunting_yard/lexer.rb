@@ -21,29 +21,24 @@ module ShuntingYard
       matches = []
 
       until sc.eos?
-        match = nil
         last_match = nil
-        longest_match_size = 0
 
         @patterns.each do |name, regex, evaluator|
           match = sc.check(regex)
           next if match.nil?
 
-          longest_match_size = [longest_match_size, match.bytesize].max
-
           value = evaluator.(match)
-          next if value.nil?
-
-          last_match = [name, match, value] if last_match.nil? || last_match[1].size < match.size
+          last_match = [name, match, value]
+          break
         end
 
-        if longest_match_size == 0
+        if last_match.nil?
           unknown_token = sc.check_until(separator_pattern).sub(separator_pattern, "")
           raise UnknownTokenError.new(unknown_token, sc.pos + 1)
         end
 
-        sc.pos += longest_match_size
-        matches << build_token(last_match) unless last_match.nil?
+        sc.pos += last_match[1].bytesize
+        matches << build_token(last_match) unless last_match[2].nil?
       end
 
       matches
