@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    shunting_yard (0.1.2)
+    shunting_yard (0.2.0)
 
 GEM
   remote: https://rubygems.org/
